@@ -37,7 +37,10 @@
           size="1000"
         >
       </label>
-      <div v-for="(pic, index) in pics" v-bind:key="index">tada {{pic}}</div>
+      <div v-for="(pic, index) in pics" v-bind:key="index">
+        <img src>
+        tada {{pic}}
+      </div>
     </form>
   </div>
 </template>
@@ -73,7 +76,9 @@ export default {
       this.address = addressData;
     },
     previewPics() {
-      this.pics = this.pics.concat(this.$refs.myPics.files);
+      const reader = new FileReader();
+      reader.onload = e => this.pics.push(e.target.result);
+      reader.readAsDataURL(input.files[0]);
     }
   }
 };
