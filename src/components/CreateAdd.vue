@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form>
+    <form @submit.prevent="processForm">
       <vue-google-autocomplete
         id="map"
         class="form-control"
@@ -10,7 +10,11 @@
       <Address v-bind:address="address"></Address>
       <label>
         {{$t("common.monthlyRent")}}
-        <input v-model="monthlyRent" type="number">
+        <input
+          v-model="monthlyRent"
+          type="number"
+          v-validate="'required|decimal:2|min_value:1'"
+        >
       </label>
       <label>
         {{$t("common.extra")}}
@@ -38,15 +42,16 @@
         >
       </label>
       <div v-for="(pic, index) in pics" v-bind:key="index">
-        <img src>
-        tada {{pic}}
+        <img v-bind:src="pic">
       </div>
+      <button>submit</button>
     </form>
   </div>
 </template>
 <script>
 import VueGoogleAutocomplete from "vue-google-autocomplete";
 import Address from "@/components/Address.vue";
+import axios from "axios";
 
 export default {
   components: { VueGoogleAutocomplete, Address },
@@ -55,7 +60,7 @@ export default {
     monthlyRent: 0,
     extra: 0,
     roomatesNumber: 0,
-    descripton: "",
+    description: "",
     pics: []
   }),
 
@@ -75,10 +80,41 @@ export default {
     getAddressData: function(addressData, placeResultData, id) {
       this.address = addressData;
     },
-    previewPics() {
-      const reader = new FileReader();
-      reader.onload = e => this.pics.push(e.target.result);
-      reader.readAsDataURL(input.files[0]);
+    previewPics(input) {
+      const file = input.target.files[0];
+      const filesize = (file.size / 1024 / 1024).toFixed(4);
+      if (filesize < 2) {
+        const reader = new FileReader();
+        reader.onload = e => this.pics.push(e.target.result);
+        reader.readAsDataURL(input.target.files[0]);
+      }
+    },
+    processForm(e) {
+      this.$validator.validateAll().then(result => {
+        if (result) {
+          // eslint-disable-next-line
+          alert("Form Submitted!");
+          return;
+        }
+
+        alert("Correct them errors!");
+      });
+
+      if (this.errors.any()) {
+        console.log("nope");
+      } else {
+        axios
+          .post("http://localhost:3000/save", {
+            address: this.address,
+            monthlyRent: this.monthlyRent,
+            extra: this.extra,
+            roomatesNumber: this.roomatesNumber,
+            description: this.description,
+            pics: this.pics
+          })
+          .then(console.log)
+          .catch(console.log);
+      }
     }
   }
 };
